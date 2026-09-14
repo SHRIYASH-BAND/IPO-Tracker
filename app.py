@@ -4,8 +4,17 @@ import os
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from dotenv import load_dotenv
+from pydantic import ValidationError
+import logging
 
 import httpx
+from settings import Settings
+from src.abstractClasses import IPONotifier
+from src.service.TelegramNotifier import TelegramIPONotifier
+
+# Configure basic logging
+logging.basicConfig(level=logging.INFO)
+
 
 
 load_dotenv()
@@ -48,54 +57,38 @@ def build_message(data: dict) -> str:
     return "\n".join(lines)
 
 
-async def send_telegram(client: httpx.AsyncClient, message: str) -> None:
-    token = os.environ["TELEGRAM_BOT_TOKEN"]
-    chat_ids = os.environ["TELEGRAM_CHAT_IDS"].split(",")
-
-    url = f"https://api.telegram.org/bot{token}/sendMessage"
-
-    for chat_id in chat_ids:
-        response = await client.post(
-            url,
-            json={
-                "chat_id": chat_id.strip(),
-                "text": message,
-                "disable_web_page_preview": True,
-            },
-            timeout=30,
-        )
-        response.raise_for_status()
-
-
-async def send_discord(client: httpx.AsyncClient, message: str) -> None:
-    webhook_url = os.environ["DISCORD_WEBHOOK_URL"]
-
-    response = await client.post(
-        webhook_url,
-        json={"content": message},
-        timeout=30,
-    )
-    response.raise_for_status()
-
 
 async def main() -> None:
-    send_to = os.environ.get("SEND_TO", "telegram").lower()
+
+    # 1. Load & Validate Configuration (Fails early if .env is missing key parameters)
+    try:
+        config = Settings()
+    except ValidationError as e:
+        logging.error(f"Configuration error: {e}")
+        return False
+
 
     async with httpx.AsyncClient() as client:
+
+        # 2. Fetch IPO list and build message
         try:
             data = await fetch_data(client)
             message = build_message(data)
         except Exception as error:
-            message = (
+
+            logging.error(
                 "⚠️ IPO notifier could not retrieve data today.\n"
                 f"Error: {type(error).__name__}"
             )
+            return False
 
-        if send_to in {"telegram", "both"}:
-            await send_telegram(client, message)
+        # 3. Notify the subscribers via notifier bots
+        notifier : IPONotifier = TelegramIPONotifier(
+            config.telegram_bot_token,
+            config.telegram_chat_id
+        )
 
-        if send_to in {"discord", "both"}:
-            await send_discord(client, message)
+        return notifier.notify(client, message)
 
 
 if __name__ == "__main__":
