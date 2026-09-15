@@ -10,24 +10,22 @@ class TelegramIPONotifier(IPONotifier):
         Telegram Notifier Bot for IPO notifications through chat ids.
     """
 
-    SEND_MSG_URL :str
-
-    def __init__(self, bot_token: str, chat_ids: list[str]):
-        self.bot_token = bot_token
-        self.chat_ids = chat_ids
-        self.SEND_MSG_URL = f"https://api.telegram.org/bot{self.bot_token}/sendMessage"
-        
 
     async def authenticate(self) -> None:
         logging.info("Authenticating Telegram Bot API token...")
 
-    async def notify(self, client: httpx.AsyncClient, message: str) -> bool:
-        logging.info(f"[Telegram -> Chat {self.chat_id}]: {message}")
+    async def notify(self, client: httpx.AsyncClient, config : Settings, message: str) -> bool:
+
+        chat_ids = config.telegram_chat_ids.split(",")
+        send_msg_url = f"https://api.telegram.org/bot{config.telegram_bot_token.get_secret_value()}/sendMessage"
+
+        logging.info(f"[Telegram -> Chat {config.telegram_chat_ids}]: {message}")
+
 
         try:
-            for chat_id in self.chat_ids:
+            for chat_id in chat_ids:
                 response = await client.post(
-                    self.SEND_MSG_URL,
+                    send_msg_url,
                     json={
                         "chat_id": chat_id.strip(),
                         "text": message,

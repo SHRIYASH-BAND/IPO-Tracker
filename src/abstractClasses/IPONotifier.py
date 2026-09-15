@@ -3,6 +3,8 @@ import httpx
 
 from abc import ABC, abstractmethod
 
+from settings import Settings
+
 
 class IPONotifier(ABC):
     """
@@ -10,7 +12,10 @@ class IPONotifier(ABC):
     """
 
     @abstractmethod
-    async def notify(self, client: httpx.AsyncClient, message: str) -> bool:
+    async def notify(self, 
+        client: httpx.AsyncClient,
+        config : Settings,
+        message: str) -> bool:
         """
         Sends an IPO alert message.
 
