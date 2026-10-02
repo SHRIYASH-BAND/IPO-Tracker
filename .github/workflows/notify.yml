@@ -35,4 +35,6 @@ jobs:
           IPO_ALERTS_API_KEY: ${{ secrets.IPO_ALERTS_API_KEY }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_IDS: ${{ secrets.TELEGRAM_CHAT_IDS }}
+          UPSTOX_API_URL: ${{ secrets.UPSTOX_API_URL }}
+          UPSTOX_ANALYTICS_API_KEY: ${{ secrets.UPSTOX_ANALYTICS_API_KEY }}
         run: python app.py
