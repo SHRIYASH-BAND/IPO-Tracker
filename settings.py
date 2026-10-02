@@ -11,6 +11,8 @@ class Settings(BaseSettings):
     ipo_alerts_api_key: SecretStr
     telegram_bot_token: SecretStr
     telegram_chat_ids: str
+    upstox_api_url: HttpUrl
+    upstox_analytics_api_key: SecretStr
     #discord_webhook_url: HttpUrl
     #excel_file_path: str = "ipo_tracker.xlsx"
 

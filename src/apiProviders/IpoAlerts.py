@@ -25,8 +25,8 @@ class IpoAlerts(IPOFetcher):
         """Get IPOs with optional filtering and pagination."""
 
         params = {
-            "page": page,
-            "limit": limit
+            # "page": page,
+            # "limit": limit
         }
 
         # open/closed... 
